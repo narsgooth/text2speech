@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>text2speech v1.0.2</title>
+	<link rel="stylesheet" type="text/css" href="mystyle.css"/>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="cell">
+				voice: 
+					<select id="voice" onchange="utterance.voice = voices[this.value]; console.log(utterance.voice)"></select>
+					speed: 
+					<input id="speed" type="number" style="width:40px" oninput="speed = parseFloat(this.value)" onwheel="speed = parseFloat(this.value)-event.deltaY/Math.abs(event.deltaY)"/>
+					<button onClick="format()">format</button>
+					<button onClick="read()">▶</button>
+					<button onClick="stop()">■</button>
+			</div>
+		</div>
+		<div class="row textarea-row">
+			<div class="cell">
+				<textarea id="textArea" placeholder="Paste text here"></textarea>
+			</div>
+		</div>
+	</div>
+<script src="config.ini"></script>
+<script>
+
+document.getElementById("speed").value = speed;
+document.getElementById("speed").value = speed;
+const textArea = document.getElementById('textArea');
+const speakButton = document.getElementById('speakButton');
+const utterance = new SpeechSynthesisUtterance();	
+voices = [];
+speechSynthesis.onvoiceschanged = () => {
+	voices = speechSynthesis.getVoices();
+	for(var i = 0 ; i < voices.length ;i++)
+	{
+		const option = document.createElement('option');
+		option.text = voices[i].name; // Text displayed to the user
+		option.value = i; // Value associated with the option
+		document.getElementById("voice").add(option); // Add the option to the select tag			
+	}
+	if (voices.length > 0) {
+		utterance.voice = voices[0];
+	} else {
+		console.warn('No voice available.');
+	}
+	document.getElementById("voice").value = voice;
+};
+var offset = 0;
+function highlightWord(charIndex) {
+	charIndex += offset;
+    textArea.selectionStart = charIndex;
+    textArea.selectionEnd = textArea.value.indexOf(' ', charIndex);
+    textArea.focus();
+}
+
+function read()
+{
+	const textToSpeak = textArea.value.trim();
+	if (textToSpeak !== '') {
+		offset =  textArea.selectionStart;
+		if(textArea.selectionStart!=textArea.selectionEnd)
+			utterance.text = textArea.value.substring(textArea.selectionStart,textArea.selectionEnd);
+		else if(textArea.selectionStart == textArea.value.length)
+		{
+			utterance.text = textArea.value;
+			offset = 0;
+		}
+		else 
+			utterance.text = textArea.value.substring(textArea.selectionStart);
+		
+		utterance.rate = parseFloat(speed);		
+		speechSynthesis.cancel(); // Cancel any ongoing speech
+		speechSynthesis.speak(utterance);
+	}
+}
+trackWordBoundaries(utterance);
+
+function trackWordBoundaries(onWordBoundary) {
+    utterance.onboundary = function(event) {
+        if (event.name === 'word') {
+            highlightWord(event.charIndex);
+        }
+    };
+}
+function stop()
+{
+	speechSynthesis.cancel(); 
+}
+function format()
+{
+	var textarea = document.getElementById("textArea");
+	var lines = textarea.value.split("\n");
+	var formattedText = "";
+
+	for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();		
+		var words = line.split(/[ ]/);		
+		console.log(words);
+		if (words.length == 1 && words[0]=="")
+			formattedText += "\n";
+		else if(['.','?'].some(char => words[words.length-1].includes(char)) )
+			formattedText += line+"\n";
+		else
+			formattedText += line +" ";		
+	}
+
+   textarea.value = formattedText;
+}
+document.addEventListener('keydown', function(event) {
+    // Check if the pressed key is the F9 key (key code 120)
+    if (event.keyCode === 120) {
+		read();
+    }
+});
+	
+</script>
+</body>
+</html>
