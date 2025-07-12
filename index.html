@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+	<title>text2speech v1.1.0</title>
+	<link rel="icon" href="favicon.png" type="image/png">
+	<!--<link rel="stylesheet" type="text/css" href="mystyle.css"/>-->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>text2speech v1.0.2</title>
-	<link rel="stylesheet" type="text/css" href="mystyle.css"/>
 </head>
 <body>
 	<div class="container">
@@ -21,14 +22,12 @@
 		</div>
 		<div class="row textarea-row">
 			<div class="cell">
-				<textarea id="textArea" placeholder="Paste text here"></textarea>
+				<textarea rows="50" cols="100" id="textArea" placeholder="Paste text here" spellcheck="false"></textarea>
 			</div>
 		</div>
 	</div>
-<script src="config.ini"></script>
 <script>
-
-document.getElementById("speed").value = speed;
+let speed = 1;
 document.getElementById("speed").value = speed;
 const textArea = document.getElementById('textArea');
 const speakButton = document.getElementById('speakButton');
@@ -44,18 +43,22 @@ speechSynthesis.onvoiceschanged = () => {
 		document.getElementById("voice").add(option); // Add the option to the select tag			
 	}
 	if (voices.length > 0) {
-		utterance.voice = voices[0];
+		utterance.voice = voices[document.getElementById("voice").value = voices.findIndex(voice => voice.name === 'Microsoft Zira - English (United States)')];
+		speed = 10;
+		document.getElementById("speed").value = speed;
 	} else {
 		console.warn('No voice available.');
 	}
-	document.getElementById("voice").value = voice;
 };
 var offset = 0;
 function highlightWord(charIndex) {
 	charIndex += offset;
     textArea.selectionStart = charIndex;
     textArea.selectionEnd = textArea.value.indexOf(' ', charIndex);
-    textArea.focus();
+	textArea.focus();
+	//console.log(textArea.value.substring(textArea.selectionStart,textArea.selectionEnd));
+	if(textArea.value.substring(textArea.selectionStart,textArea.selectionEnd).includes('\n'))
+		scrollToCaret(textArea);
 }
 
 function read()
@@ -116,8 +119,40 @@ document.addEventListener('keydown', function(event) {
     if (event.keyCode === 120) {
 		read();
     }
+	else if (event.key === 'Escape') {
+		scrollToCaret(textArea);
+    }
 });
-	
+function scrollToCaret(textarea) {
+  const start = textarea.selectionStart;
+
+  // Create a hidden mirror element to calculate position
+  const div = document.createElement('div');
+  const style = getComputedStyle(textarea);
+
+  for (let prop of [
+    'boxSizing', 'width', 'height', 'padding', 'border', 'font', 'lineHeight', 'overflow'
+  ]) {
+    div.style[prop] = style[prop];
+  }
+
+  div.style.position = 'absolute';
+  div.style.visibility = 'hidden';
+  div.style.whiteSpace = 'pre-wrap';
+  div.style.wordWrap = 'break-word';
+  div.textContent = textarea.value.substring(0, start);
+
+  const span = document.createElement('span');
+  span.textContent = textarea.value.substring(start) || '.';
+  div.appendChild(span);
+  document.body.appendChild(div);
+
+  const caretTop = span.offsetTop;
+  textarea.scrollTop = caretTop - textarea.clientHeight / 2;
+
+  document.body.removeChild(div);
+}
+
 </script>
 </body>
 </html>
