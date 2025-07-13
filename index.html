@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>text2speech v1.1.0</title>
+	<title>text2speech v1.1.1</title>
 	<link rel="icon" href="favicon.png" type="image/png">
 	<!--<link rel="stylesheet" type="text/css" href="mystyle.css"/>-->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +22,7 @@
 		</div>
 		<div class="row textarea-row">
 			<div class="cell">
-				<textarea rows="50" cols="100" id="textArea" placeholder="Paste text here" spellcheck="false"></textarea>
+				<textarea rows="56" cols="96" id="textArea" placeholder="Paste text here" spellcheck="false"></textarea>
 			</div>
 		</div>
 	</div>
@@ -102,8 +102,9 @@ function format()
 
 	for (var i = 0; i < lines.length; i++) {
         var line = lines[i].trim();		
-		var words = line.split(/[ ]/);		
-		console.log(words);
+		line = line.replace(/\[\d+\]/g, '');
+		var words = line.split(/[ ]/);
+		//console.log(words);
 		if (words.length == 1 && words[0]=="")
 			formattedText += "\n";
 		else if(['.','?'].some(char => words[words.length-1].includes(char)) )
